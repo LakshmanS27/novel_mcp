@@ -26,6 +26,14 @@ SENSITIVE_KEYWORDS = {
     "pii",
     "key",
     "pem",
+    "env",
+    "config",
+    "backup",
+    "export",
+    "dump",
+    "migrate",
+    "aadhaar",
+    "aadhar",
 }
 
 RISKY_EXTENSIONS = {

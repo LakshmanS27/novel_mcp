@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import os
+import platform
 from pathlib import Path
 from typing import Any
 
 
-ALLOWED_ROOT_PREFIXES = ("/home/", "/mnt/")
+if platform.system() == "Darwin":
+    ALLOWED_ROOT_PREFIXES = ("/Users/", "/tmp/", "/private/")
+else:
+    ALLOWED_ROOT_PREFIXES = ("/home/", "/mnt/", "/tmp/")
 
 
 def normalize_path(path_str: str) -> Path:
@@ -15,17 +19,14 @@ def normalize_path(path_str: str) -> Path:
 
 def is_supported_path(path: Path) -> bool:
     text = str(path)
-    return path.is_absolute() and (
-        text == "/home"
-        or text.startswith(ALLOWED_ROOT_PREFIXES)
-        or text == "/mnt"
-    )
+    return path.is_absolute() and any(text.startswith(prefix) for prefix in ALLOWED_ROOT_PREFIXES)
 
 
 def ensure_safe_path(path_str: str) -> Path:
     path = normalize_path(path_str)
     if not is_supported_path(path):
-        raise ValueError("Only Linux and WSL absolute paths under /home or /mnt are supported.")
+        allowed = ", ".join(ALLOWED_ROOT_PREFIXES)
+        raise ValueError(f"Only absolute paths under {allowed} are supported.")
     return path
 
 

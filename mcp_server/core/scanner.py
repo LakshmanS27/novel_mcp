@@ -13,9 +13,11 @@ from mcp_server.server.config import Settings
 
 PATTERNS = {
     "email": re.compile(rb"\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[A-Za-z]{2,}\b"),
-    "pan": re.compile(rb"\b(?:\d[ -]*?){13,19}\b"),
+    "pan_card": re.compile(rb"\b(?:\d[ -]*?){13,19}\b"),
     "api_key": re.compile(rb"\b(?:sk|rk|pk)_[A-Za-z0-9]{16,}\b"),
     "aws_key": re.compile(rb"\bAKIA[0-9A-Z]{16}\b"),
+    "indian_pan": re.compile(rb"\b[A-Z]{5}[0-9]{4}[A-Z]\b"),
+    "aadhaar": re.compile(rb"\b[2-9][0-9]{11}\b"),
 }
 
 KEYWORD_PATTERNS = [
@@ -118,7 +120,7 @@ async def scan_directory_sensitive_data(path: str | Path, settings: Settings) ->
 
 async def validate_compliance(scan_result: dict[str, Any]) -> dict[str, Any]:
     findings = scan_result.get("findings", [])
-    severe = [item for item in findings if item["type"] in {"api_key", "aws_key", "pan"}]
+    severe = [item for item in findings if item["type"] in {"api_key", "aws_key", "pan_card", "indian_pan", "aadhaar"}]
     status = "NON_COMPLIANT" if severe else "REVIEW" if findings else "COMPLIANT"
     return {
         "path": scan_result.get("path"),

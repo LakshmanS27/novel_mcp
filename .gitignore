@@ -53,3 +53,6 @@ Thumbs.db
 # Project-local tooling
 .python-version
 .codex/
+eval/reports/
+.eval_ground_truth/
+.venv/

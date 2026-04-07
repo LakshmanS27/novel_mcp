@@ -122,17 +122,29 @@ MODE_KEYWORDS = {
         "invoice",
         "backup",
         "export",
+        "migrate",
+        "migration",
+        "payment",
+        "billing",
+        "salary",
+        "dump",
     },
 }
 
 
 def _classify_extension(path: Path) -> tuple[str, float, list[str]]:
     suffix = path.suffix.lower()
+    name_lower = path.name.lower()
     reasons: list[str] = []
     if suffix in LOW_VALUE_EXTENSIONS:
         return "excluded_low_value", -1.0, [f"low-value extension {suffix}"]
+    # Handle .env.* files (e.g. .env.production, .env.local)
+    if name_lower.startswith(".env"):
+        return "high_value_text", 0.8, [f"environment config file ({path.name})"]
     if suffix in HIGH_VALUE_TEXT_EXTENSIONS:
         return "high_value_text", 0.6, [f"text-bearing extension {suffix}"]
+    if suffix in {".py", ".js", ".ts", ".rb", ".go", ".java", ".sh", ".bash", ".ps1"}:
+        return "source_code", 0.25, [f"source code extension {suffix}"]
     if suffix in PARSER_NEEDED_EXTENSIONS:
         return "parser_needed", 0.35, [f"document extension {suffix} likely needs specialized parsing"]
     if not suffix:
