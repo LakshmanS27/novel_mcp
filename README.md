@@ -11,6 +11,9 @@ Every file starts **closed**. The system inventories a filesystem through metada
 
 **License:** MIT (see `LICENSE`) · **Preprint:** forthcoming — the author is seeking arXiv endorsement · **Contact:** rajasekaran.adhit@gmail.com · [linkedin.com/in/adhi1991](https://linkedin.com/in/adhi1991)
 
+V1 -> Poster + Inital research - Adhithya Rajasekaran
+V2 + full Implemnetation -> Paper WIP - Lakshman + Adhithya + Dhinakaran + Navya + Kishore + Balaji
+
 **Documentation:** full v1 system guide — architecture, install, API/tool reference, MCP client usage — lives in [`docs/SYSTEM_GUIDE.md`](docs/SYSTEM_GUIDE.md). Evaluation instructions: [`eval/README.md`](eval/README.md) and [`EXPERIMENTATION.md`](EXPERIMENTATION.md).
 
 ---
