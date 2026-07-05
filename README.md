@@ -7,164 +7,402 @@
 
 ---
 
-## Core Idea
+## One-Line Summary
 
-Every file starts **closed**.
+**Read the Room** is a metadata-first sensitive data discovery system that asks:
 
-Read the Room evaluates a metadata-first approach to sensitive data discovery. Instead of opening every file, the system first inventories a filesystem using **metadata-only MCP tools**:
+> Can we find sensitive files while opening far fewer files?
 
-* Directory structure
-* File names
-* Extensions
-* Permissions
-* Sizes
-* Path context
-
-It then scores every path, selects a small candidate set, and opens content only for those selected files. Every decision is logged.
-
-> The central research question:
-> **Should discovery systems be judged only by what they find, or also by what they had to read to find it?**
+Instead of reading every file, the system first inspects only filesystem metadata, ranks paths by risk, and opens content only for a small selected set. Every access decision is logged.
 
 ---
 
-## Version Status
+## Core Idea
 
-| Component                          |              Status | Description                                                                                                                |
-| ---------------------------------- | ------------------: | -------------------------------------------------------------------------------------------------------------------------- |
-| **v1 system**                      |           Available | FastAPI application mounted as an MCP server using `fastapi_mcp`                                                           |
-| **v1 tools**                       |           Available | 15 tools for filesystem inspection, graph-based risk scoring, candidate selection, targeted scanning, and analyst feedback |
-| **v1 evaluation harness**          |           Available | Plants synthetic ground truth and compares selective scanning against an exhaustive baseline                               |
-| **v2 evaluation system**           |      In development | Deterministic FS-BOM read gate over synthetic 5K / 10K corpora with seeded variants and adversarial evasion sets           |
-| **ACM SecDev 2026 poster figures** | Poster-only for now | Report v2-generation experiments and are not yet reproducible from this repository                                         |
+Most sensitive data discovery systems are judged by:
 
-> **Important reproducibility note**
-> This repository currently contains the **v1 system**.
-> The ACM SecDev 2026 poster reports the subsequent **v2 evaluation generation**.
-> Until v2 lands in this repository, the poster’s exposure and adversarial figures are **not reproducible from this tree**. We state this plainly rather than implying otherwise.
+* What they find
+* Their recall
+* Their precision
+* Their false positives
+
+This project argues that they should also be judged by:
+
+> **What they had to read in order to find it.**
+
+Every file starts **closed**.
+
+The system begins with metadata-only inspection:
+
+* File and directory names
+* Extensions
+* Sizes
+* Permissions
+* Directory structure
+* Path context
+
+It then scores paths, selects likely candidates, and opens only those files for targeted scanning.
+
+---
+
+## Repository Status
+
+This repository currently contains the **v1 system**.
+
+The ACM SecDev 2026 poster reports results from a later **v2 evaluation generation**. That v2 work is under active development and will be released here.
+
+Until v2 is released, the poster’s v2 exposure and adversarial evaluation figures are **not fully reproducible from this repository**.
+
+| Area                  |         Status | Notes                                                                                                          |
+| --------------------- | -------------: | -------------------------------------------------------------------------------------------------------------- |
+| v1 system             |      Available | FastAPI application mounted as an MCP server using `fastapi_mcp`                                               |
+| v1 MCP tools          |      Available | 15 tools for filesystem inspection, risk scoring, candidate selection, targeted scanning, and analyst feedback |
+| v1 evaluation harness |      Available | Seeds synthetic ground truth and compares selective scanning against an exhaustive baseline                    |
+| v2 evaluation system  | In development | Deterministic FS-BOM read gate over synthetic 5K / 10K corpora                                                 |
+| Poster figures        |       v2-based | Report later evaluation-generation results, not all reproducible from the current tree                         |
 
 ---
 
 ## Provenance and Roles
 
-| Workstream                         | Contributors                                                                 |
-| ---------------------------------- | ---------------------------------------------------------------------------- |
-| Research idea                      | **Adhithya Rajasekaran**                                                     |
-| System design                      | **Adhithya Rajasekaran**                                                     |
-| Evaluation methodology             | **Adhithya Rajasekaran**                                                     |
-| ACM SecDev 2026 poster             | **Adhithya Rajasekaran**, sole author                                        |
-| Code implementation                | Lakshman Shanmugam                                                           |
-| Evaluation execution               | Lakshman Shanmugam                                                           |
-| v2 paper / full implementation WIP | Lakshman Shanmugam, Adhithya Rajasekaran, Dhinakaran, Navya, Kishore, Balaji |
+The research idea, system design, and evaluation methodology are by **Adhithya Rajasekaran**, sole author of the ACM SecDev 2026 poster.
 
----
+**Lakshman Shanmugam** contributes code implementation and evaluation execution, and is collaborating on the v2 system currently in development.
 
-## Research Lineage
-
-| Stage  | Output                                         | Ownership                                                   |
-| ------ | ---------------------------------------------- | ----------------------------------------------------------- |
-| **v1** | Poster and initial research prototype          | Adhithya Rajasekaran                                        |
-| **v2** | Full implementation and paper work-in-progress | Lakshman + Adhithya + Dhinakaran + Navya + Kishore + Balaji |
+| Workstream                      | Contributors                                           |
+| ------------------------------- | ------------------------------------------------------ |
+| Research idea                   | Adhithya Rajasekaran                                   |
+| System design                   | Adhithya Rajasekaran                                   |
+| Evaluation methodology          | Adhithya Rajasekaran                                   |
+| ACM SecDev 2026 poster          | Adhithya Rajasekaran                                   |
+| v1 poster and initial research  | Adhithya Rajasekaran                                   |
+| Inital Code Setup + Help        | Lakshman                                               |
+| v2 implementation and paper WIP | Lakshman, Adhithya, Dhinakaran, Navya, Kishore, Balaji |
 
 ---
 
 ## License, Preprint, and Contact
 
-| Item     | Details                                     |
-| -------- | ------------------------------------------- |
-| License  | MIT — see `LICENSE`                         |
-| Preprint | Forthcoming — arXiv endorsement in progress |
-| Contact  | `rajasekaran.adhit@gmail.com`               |
-| LinkedIn | `linkedin.com/in/adhi1991`                  |
+| Item     | Details                                    |
+| -------- | ------------------------------------------ |
+| License  | MIT — see `LICENSE`                        |
+| Preprint | Forthcoming; arXiv endorsement in progress |
+| Contact  | `rajasekaran.adhit@gmail.com`              |
+| LinkedIn | `linkedin.com/in/adhi1991`                 |
 
 ---
 
 ## Documentation
 
-| Document                | Purpose                                                                           |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| `docs/SYSTEM_GUIDE.md`  | Full v1 system guide: architecture, install, API/tool reference, MCP client usage |
-| `eval/README.md`        | Evaluation harness instructions                                                   |
-| `EXPERIMENTATION.md`    | Experimentation notes and methodology                                             |
-| `eval/FIXTURES_NOTE.md` | Notes about intentionally planted synthetic secrets                               |
+| File                    | Purpose                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `docs/SYSTEM_GUIDE.md`  | Full v1 system guide: architecture, installation, API reference, MCP tools, and MCP client usage |
+| `eval/README.md`        | Evaluation harness instructions                                                                  |
+| `EXPERIMENTATION.md`    | Experimentation notes                                                                            |
+| `eval/FIXTURES_NOTE.md` | Notes on intentionally planted synthetic secrets                                                 |
 
 ---
 
-# Picked Up the Leaflet at SecDev?
+# System Overview
 
-This section decodes the leaflet shorthand and scopes every number precisely.
+Read the Room follows a three-phase selective discovery workflow.
 
-The print version is frozen.
-This page is the living clarification.
+```text
+Phase 1: Metadata-only inventory
+        ↓
+Phase 2: Risk scoring and candidate selection
+        ↓
+Phase 3: Targeted content scanning
+```
 
 ---
 
-## Leaflet Legend: The “Model-Assisted Lane” Line
+## Phase 1: Metadata-Only Inventory
 
-Example leaflet line:
+The first phase does **not** open file content.
+
+It collects structural and metadata signals such as:
+
+| Signal            | Example                                      |
+| ----------------- | -------------------------------------------- |
+| Path              | `/finance/payroll/2025/report.xlsx`          |
+| Filename          | `employee_tax_ids.csv`                       |
+| Extension         | `.csv`, `.xlsx`, `.pdf`, `.env`              |
+| Size              | Small config file vs. large archive          |
+| Permissions       | World-readable, owner-only, group-readable   |
+| Directory context | `/tests/`, `/src/`, `/backups/`, `/exports/` |
+
+This creates a filesystem bill of materials style view: an **FS-BOM**.
+
+---
+
+## Phase 2: Risk Scoring
+
+Each path is scored using metadata-derived signals.
+
+The v2 FS-BOM score is a hand-weighted heuristic with zero training:
+
+```text
+sᵢ =
+0.45 · path-keywords
++ 0.25 · extension
++ 0.15 · world-readable
++ 0.15 · size-vs-budget
+```
+
+| Component      | Weight | Meaning                                                      |
+| -------------- | -----: | ------------------------------------------------------------ |
+| Path keywords  |   0.45 | Sensitive words in path or filename                          |
+| Extension      |   0.25 | File type risk                                               |
+| World-readable |   0.15 | Permission exposure                                          |
+| Size-vs-budget |   0.15 | Whether the file is plausible to scan within the read budget |
+
+The key property is that this score is computed from metadata only.
+
+No file content is read during scoring.
+
+---
+
+## Phase 3: Targeted Content Scanning
+
+Only selected candidates are opened.
+
+The system then performs targeted scanning for sensitive content, including:
+
+* Secrets
+* PII
+* PHI
+* Card data
+* Compliance-sensitive files
+
+The current v1 system also supports analyst feedback so that scoring weights can be adapted over time.
+
+---
+
+# What Makes This Different?
+
+Traditional scanning often starts by reading everything.
+
+Read the Room starts from the opposite assumption:
+
+> A file should remain closed unless there is a reason to open it.
+
+The contribution is not simply better detection. The contribution is **exposure accounting**.
+
+| Question                                | Traditional Scanner | Read the Room                |
+| --------------------------------------- | ------------------- | ---------------------------- |
+| Did it find sensitive data?             | Yes / no            | Yes / no                     |
+| How precise was it?                     | Measured            | Measured                     |
+| How much did it read?                   | Often not central   | Central metric               |
+| Were content reads justified?           | Usually implicit    | Explicit and logged          |
+| Can the inventory phase avoid content?  | Usually no          | Yes                          |
+| Is access bounded by tool capabilities? | Usually no          | Yes, via MCP tool subsetting |
+
+---
+
+# MCP Access Boundary
+
+The system uses MCP tools so that filesystem access can be divided into separate capabilities.
+
+During metadata-only inventory, the agent is given structure-oriented tools only.
+
+Content-reading tools are not available in that phase.
+
+This means the access boundary is enforced by:
+
+> **Capability subsetting at the MCP tool manifest.**
+
+Every capability is a discrete, named, loggable tool call.
+
+In the v2 run against the official Filesystem MCP server:
+
+```text
+version / commit: ___
+tools: 14
+transport: stdio
+```
+
+the inventory phase recorded:
+
+```text
+zero content-read calls
+```
+
+This was verified from the tool-call log.
+
+In the pinned version used for that run, `search_files` performs name/path matching only. It does not perform content grep.
+
+---
+
+# Important Privacy Note
+
+The FS-BOM is **content-free**, not **metadata-free**.
+
+Metadata can still be sensitive.
+
+Examples:
+
+* A filename may reveal a patient name.
+* A folder path may reveal a legal matter.
+* Ownership may reveal team structure.
+* Timestamps may reveal business activity.
+* Permissions may reveal exposure.
+
+So the claim is not “zero exposure.”
+
+The claim is narrower:
+
+> Metadata-first discovery creates a smaller exposure surface than read-all scanning.
+
+The metadata inventory should still inherit the same access boundary, retention policy, and audit logging expectations as content reads.
+
+---
+
+# Evaluation Summary
+
+There are two generations of evaluation discussed in this project.
+
+| Evaluation    | Repository Status | Purpose                                                                                                            |
+| ------------- | ----------------: | ------------------------------------------------------------------------------------------------------------------ |
+| v1 evaluation |         Available | Demonstrates selective scanning against an exhaustive baseline using synthetic ground truth                        |
+| v2 evaluation |    In development | Evaluates deterministic FS-BOM read gating over larger synthetic corpora with seeded variants and adversarial sets |
+
+---
+
+## v1 Evaluation
+
+The current repository includes an evaluation harness that:
+
+* Plants synthetic ground truth
+* Runs selective scanning
+* Runs an exhaustive baseline
+* Compares results
+
+Reported metrics include:
+
+| Metric          | Meaning                                             |
+| --------------- | --------------------------------------------------- |
+| Recall          | Fraction of planted positives found                 |
+| Precision       | Fraction of flagged results that are true positives |
+| Scan reduction  | Reduction in number of files opened                 |
+| Wall-clock time | Runtime compared with exhaustive scanning           |
+
+---
+
+## v2 Evaluation
+
+The ACM SecDev 2026 poster reports results from the v2 evaluation generation.
+
+This evaluation uses:
+
+* Synthetic 5K / 10K corpora
+* 10-seed evaluation matrix
+* Seeded source profiles
+* Adversarial evasion sets
+* Deterministic FS-BOM read gate
+* Checksum-pinned fixture integrity
+
+| Term              | Meaning                                                   |
+| ----------------- | --------------------------------------------------------- |
+| 5K corpus         | 4,700 evaluated files after excluding non-evaluable files |
+| 10K corpus        | 9,333 evaluated files after excluding non-evaluable files |
+| M10               | 10-seed evaluation matrix                                 |
+| 516-row checksums | Fixture integrity manifest pinning files by hash          |
+| 195 tests         | v2 test suite across macOS and WSL2                       |
+
+The gate is deterministic. Seeds randomize fixture generation, not the gate itself.
+
+---
+
+# Poster Figure Clarifications
+
+This section clarifies the ACM SecDev 2026 poster figures.
+
+---
+
+## Single-Fixture Model-Assisted Example
+
+One poster line reports a single Flask fixture:
 
 ```text
 Flask 273f · A:273 0.71 0/2 · B:100 0.71 0/2 · C(LLM+MCP):8 1.00 2/2
 ```
 
-This should be read as:
+This means:
 
 ```text
 files opened · precision · context traps suppressed
 ```
 
-on a single Flask fixture.
+| Lane | Meaning                | Files Opened | Precision | Context Traps Suppressed |
+| ---- | ---------------------- | -----------: | --------: | -----------------------: |
+| A    | Read-all baseline      |          273 |      0.71 |                    0 / 2 |
+| B    | Heuristic shortlist    |          100 |      0.71 |                    0 / 2 |
+| C    | Bounded LLM + MCP lane |            8 |      1.00 |                    2 / 2 |
 
-| Lane  | Meaning                | Files Opened | Precision | Context Traps Suppressed |
-| ----- | ---------------------- | -----------: | --------: | -----------------------: |
-| **A** | Read-all baseline      |          273 |      0.71 |                    0 / 2 |
-| **B** | Heuristic shortlist    |          100 |      0.71 |                    0 / 2 |
-| **C** | Bounded LLM + MCP lane |            8 |      1.00 |                    2 / 2 |
+The reduction from 273 files opened to 8 files opened is:
 
-### What this number means
+```text
+273 → 8 = 97% reduction
+```
 
-The reduction from **273 files opened to 8 files opened** is a **97% reduction**.
+This is a **single-fixture illustration**, not a scaled benchmark.
 
-But this is a **single-fixture illustration**, not a scaled benchmark.
+It should not be confused with the separate v2 corpus-level read-reduction figure.
 
-| Figure             | Applies To                                |
-| ------------------ | ----------------------------------------- |
-| **97% reduction**  | Single Flask fixture: 273 → 8             |
-| **~75% reduction** | v2 deterministic gate on 5K / 10K corpora |
-
-> These are different experiments.
-> They should not be conflated.
-
----
-
-## Two Trap-Suppression Numbers, Two Different Experiments
-
-The leaflet contains two trap-related numbers that refer to different experiments.
-
-|    Number | Experiment                                      | Meaning                                                                                                               |
-| --------: | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-|   **0.1** | v2 deterministic metadata gate at 5K-file scale | Weak decoy suppression. Metadata alone often cannot distinguish a test card in `/tests/` from a real card in `/src/`. |
-| **2 / 2** | Bounded LLM lane on the single Flask fixture    | The LLM lane can reason about context and suppress both fixture decoys.                                               |
-
-> Whether LLM-lane trap suppression holds at scale is future work.
+| Figure         | Applies To                                |
+| -------------- | ----------------------------------------- |
+| 97% reduction  | Single Flask fixture only                 |
+| ~75% reduction | v2 deterministic gate on 5K / 10K corpora |
 
 ---
 
-## Recall: Base Positives vs. Adversarial Set
+## Trap Suppression Clarification
 
-The poster separates two different evaluation groups:
+Two trap-suppression values appear in the poster, but they come from different experiments.
 
-| Evaluation Group            | Meaning                                                             |                                                       Result |
-| --------------------------- | ------------------------------------------------------------------- | -----------------------------------------------------------: |
-| **Base planted positives**  | Realistic seeded secrets across source profiles and corpus scales   |                                                  100% recall |
-| **Adversarial evasion set** | Deliberately crafted trap cases designed to defeat metadata signals | Partial recall, with misses concentrated in S3-like profiles |
+| Value | Experiment                                 | Interpretation                 |
+| ----: | ------------------------------------------ | ------------------------------ |
+|   0.1 | v2 deterministic metadata gate at 5K scale | Weak decoy suppression         |
+| 2 / 2 | Single-fixture bounded LLM lane            | Both fixture decoys suppressed |
 
-### Adversarial Evasion Set
+Metadata alone cannot reliably distinguish every decoy.
+
+For example:
+
+```text
+/tests/sample_card.txt
+/src/customer_card_export.csv
+```
+
+Both paths may contain signals related to card data, but only one may represent realistic sensitive exposure.
+
+The LLM lane can reason about context in the small fixture. Whether that holds at scale is future work.
+
+---
+
+## Recall Clarification
+
+The poster separates two groups:
+
+| Group                   | Meaning                                        |         Result |
+| ----------------------- | ---------------------------------------------- | -------------: |
+| Base planted positives  | Realistic seeded sensitive files               |    100% recall |
+| Adversarial evasion set | Hard cases designed to defeat metadata signals | Partial recall |
+
+The 100% recall claim applies to **base planted positives**, not to the adversarial evasion set.
+
+---
+
+## Adversarial Evasion Results
+
+The adversarial set contains:
 
 | Metric                          | Value |
 | ------------------------------- | ----: |
-| Total trap cases                | 2,730 |
+| Total adversarial cases         | 2,730 |
 | Seeds                           |    10 |
-| Trap cases per seed             |   273 |
+| Cases per seed                  |   273 |
 | S3-like cases per seed          |   107 |
 | Misses per seed                 |    23 |
 | Total misses                    |   230 |
@@ -175,15 +413,27 @@ The poster separates two different evaluation groups:
 | Local filesystem profile recall |  100% |
 | Shared-drive profile recall     |  100% |
 
-The missed cases are all in the **S3-like profile**.
+All missed cases are in the S3-like profile.
 
-Flat namespaces with opaque object keys carry little or no path semantics. That is the mapped boundary of metadata-first triage, not a hidden failure.
+This is expected to be the hardest profile because flat object-store namespaces often lack useful path semantics.
+
+Example:
+
+```text
+s3://bucket/a8f31d9c-blob
+s3://bucket/export-00017
+s3://bucket/tmp-object-92
+```
+
+With opaque object keys, metadata-first triage has less context to reason from.
+
+This is a mapped boundary of the approach, not a hidden failure.
 
 ---
 
-## Erratum: Poster Section 04
+## Poster Erratum
 
-The printed poster headline says:
+The poster Section 04 headline says:
 
 ```text
 92.7% of 2,730 trap cases caught
@@ -202,139 +452,49 @@ The correct aggregate is:
 | Caption: “230 of 2,730 missed”     | Correct   |
 | Per-profile bars                   | Correct   |
 | Section 07: “23 misses every seed” | Correct   |
-| Correct aggregate                  | **91.6%** |
+| Correct aggregate                  | 91.6%     |
 
 ---
 
-## Terminology Note: “Trap” Appears Twice
+## Terminology: Two Meanings of “Trap”
 
-The word **trap** appears in two different senses.
+The word “trap” is used in two ways.
 
-| Term                 | Meaning                       | Desired System Behavior |
-| -------------------- | ----------------------------- | ----------------------- |
-| **Trap cases**       | Adversarial evasion positives | Catch them              |
-| **Trap suppression** | Planted fixture decoys        | Skip them               |
+| Term                  | Meaning                                       | Desired Behavior |
+| --------------------- | --------------------------------------------- | ---------------- |
+| Adversarial trap case | A hard positive case the system should catch  | Catch it         |
+| Decoy trap            | A planted non-sensitive or context-only decoy | Suppress it      |
 
-> Evasion traps are things the system should catch.
-> Decoy traps are things the system should ignore.
+In short:
 
----
-
-# Leaflet Terms
-
-| Term                        | Meaning                                                                                                                         |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **5K / 10K**                | Synthetic corpora. The evaluated file counts are 4,700 and 9,333 respectively; non-evaluable files are excluded.                |
-| **M10**                     | 10-seed evaluation matrix                                                                                                       |
-| **10 seeds → 25.2–25.7%**   | Seeds randomize fixture generation, not the gate. The gate is deterministic and reproduces byte-identically on a fixed fixture. |
-| **516-row checksums**       | Fixture integrity manifest pinning every evaluation file by hash                                                                |
-| **195 tests**               | v2 test suite across macOS and WSL2                                                                                             |
-| **Deployment profiles A–E** | Endpoint DLP assist, code and secret scanning, privacy discovery, compliance evidence review, and org-controlled inference      |
-| **FS-BOM score `sᵢ`**       | Hand-weighted metadata heuristic with zero training                                                                             |
+```text
+Evasion traps should be caught.
+Decoy traps should be skipped.
+```
 
 ---
 
-## Deployment Profiles A–E
+# Deployment Profiles
 
-These are distinct from the A / B / C lanes used in the single-fixture leaflet illustration.
+The poster describes deployment profiles A–E.
 
-| Profile | Deployment Use Case               |
+These are not the same as the A / B / C lanes in the single-fixture example.
+
+| Profile | Use Case                          |
 | ------- | --------------------------------- |
-| **A**   | Endpoint DLP assist               |
-| **B**   | Code and secret scanning          |
-| **C**   | Privacy discovery across drives   |
-| **D**   | Compliance evidence review        |
-| **E**   | Organization-controlled inference |
+| A       | Endpoint DLP assist               |
+| B       | Code and secret scanning          |
+| C       | Privacy discovery across drives   |
+| D       | Compliance evidence review        |
+| E       | Organization-controlled inference |
 
-Each profile shares an access-boundary idea, but each requires separate validation.
-
----
-
-## FS-BOM Score
-
-The FS-BOM score `sᵢ` is a hand-weighted heuristic computed from path and stat metadata only.
-
-```text
-sᵢ =
-0.45 · path-keywords
-+ 0.25 · extension
-+ 0.15 · world-readable
-+ 0.15 · size-vs-budget
-```
-
-| Signal                    | Weight | Source                   |
-| ------------------------- | -----: | ------------------------ |
-| Path keywords             |   0.45 | Path / filename metadata |
-| Extension                 |   0.25 | File extension           |
-| World-readable permission |   0.15 | Permission metadata      |
-| Size-vs-budget            |   0.15 | File size metadata       |
-
-No file content is read to compute this score.
+Each profile shares the same access-boundary principle, but each requires separate validation.
 
 ---
 
-# Enforcement
+# Scanner Baselines
 
-The leaflet phrase:
-
-```text
-Enforced by the protocol
-```
-
-is shorthand.
-
-More precisely, the mechanism is:
-
-> **Capability subsetting at the MCP tool manifest.**
-
-During the inventory phase, the system mounts only structure-oriented tools. Every capability is a discrete, named, loggable call.
-
-The v2 run against the official Filesystem MCP server:
-
-```text
-version / commit: ___
-tools: 14
-transport: stdio
-```
-
-recorded:
-
-```text
-zero content-read calls
-```
-
-verified from the tool-call log.
-
-`search_files` performs name/path matching only in the pinned version. It does not perform content grep.
-
----
-
-# Metadata Is Not Privacy-Neutral
-
-The FS-BOM is **content-free**, not **metadata-free**.
-
-Paths, filenames, owners, timestamps, permissions, and directory structure can themselves reveal sensitive or personal information.
-
-The claim is therefore limited and precise:
-
-> Metadata-first discovery creates a strictly smaller exposure surface than read-all scanning.
-> It does not create zero exposure.
-
-The inventory phase inherits the same access boundary and audit logging expectations as content reads.
-
----
-
-# Sources and Baselines
-
-## Production DLP False Positives
-
-The “80%+ false positives” problem statistic follows Ponemon Institute reporting of **50–80% false-positive rates** in production DLP deployments. The leaflet uses the upper bound.
-
----
-
-## Local Scanner Baselines
-
-Poster Section 05 compares against local scanner baselines.
+The poster compares against local scanner baselines.
 
 | Scanner        | Recall | Precision | Trap Score |
 | -------------- | -----: | --------: | ---------: |
@@ -344,103 +504,65 @@ Poster Section 05 compares against local scanner baselines.
 
 These are secret scanners.
 
-The ground truth in Read the Room spans:
+The Read the Room ground truth includes sensitive data families outside traditional secret-scanning scope:
 
 * PII
 * PHI
-* Card-data families
-* Secrets
+* Card data
 * Compliance-sensitive files
+* Secrets
 
-Some of these are outside the detection scope of traditional secret scanners.
+The project does **not** claim to simply out-detect these tools.
 
-> The contribution is not “out-detecting” these tools.
-> The contribution is the access boundary and exposure accounting that these tools generally lack.
+The claimed contribution is:
 
----
-
-# What Is in This Repository Today
-
-This repository currently contains the **v1 selective DLP system**.
-
-## v1 System Flow
-
-```text
-Phase 1: Metadata-only structural analysis
-        ↓
-Phase 2: Risk scoring and candidate selection
-        ↓
-Phase 3: Targeted content scanning and analyst feedback
-```
+> Access-boundary-aware discovery with explicit exposure accounting.
 
 ---
 
-## Phase 1: Metadata-Only Structural Analysis
+# False Positive Context
 
-The system first inventories the filesystem without reading file content.
+The poster references production DLP false-positive challenges.
 
-| Reads Content? | What It Uses                                                   |
-| -------------- | -------------------------------------------------------------- |
-| No             | Structure, names, extensions, permissions, sizes, path context |
+The “80%+ false positives” framing follows Ponemon Institute reporting of 50–80% false-positive rates in production DLP deployments. The poster uses the upper-bound framing.
 
 ---
 
-## Phase 2: Risk Scoring and Candidate Selection
+# What Is in This Repository
 
-The system scores paths using multiple metadata-derived and structural signals.
+The current v1 tree includes:
 
-| Signal Type        | Example                                               |
-| ------------------ | ----------------------------------------------------- |
-| Keyword signal     | `finance`, `identity`, `patient`, `secret`, `payroll` |
-| Semantic inference | Path-level context suggesting sensitive purpose       |
-| Graph centrality   | Files connected to high-risk folders or clusters      |
-| Metadata signal    | Extension, permissions, size, ownership               |
-
-By default, the system selects roughly the top **5%** of candidates for content scanning.
-
----
-
-## Phase 3: Targeted Content Scanning and Feedback
-
-Only selected candidates are opened for content inspection.
-
-The system then performs:
-
-* Targeted content scanning
-* Compliance validation
-* Analyst feedback collection
-* Adaptive scoring-weight updates
+* FastAPI application
+* MCP server mounting via `fastapi_mcp`
+* Filesystem inspection tools
+* Graph-based risk scoring
+* Candidate selection
+* Targeted scanning
+* Analyst feedback
+* Evaluation harness
+* Synthetic fixture generation
 
 ---
 
-## Interfaces
+## v1 MCP Tooling
 
-The v1 system is exposed through both:
+The v1 system exposes 15 tools spanning:
 
-| Interface   | Purpose                               |
+| Tool Area             | Purpose                                    |
+| --------------------- | ------------------------------------------ |
+| Filesystem inspection | Inspect structure and metadata             |
+| Graph analysis        | Build and analyze filesystem relationships |
+| Risk scoring          | Rank paths by sensitivity likelihood       |
+| Candidate selection   | Select files for targeted scanning         |
+| Targeted scanning     | Open and inspect selected files            |
+| Analyst feedback      | Adjust scoring behavior based on review    |
+
+The system is exposed both as:
+
+| Interface   | Use                                   |
 | ----------- | ------------------------------------- |
-| HTTP routes | Direct API usage                      |
-| MCP tools   | Agent/tool-based filesystem workflows |
-
----
-
-## Evaluation Harness
-
-The `eval/` harness:
-
-* Seeds synthetic ground truth
-* Runs selective scanning
-* Runs exhaustive baseline scanning
-* Compares results
-
-It reports:
-
-| Metric          | Meaning                                        |
-| --------------- | ---------------------------------------------- |
-| Recall          | How many planted positives were found          |
-| Precision       | How many flagged items were true positives     |
-| Scan reduction  | How many fewer files were opened               |
-| Wall-clock time | Runtime comparison against exhaustive scanning |
+| HTTP routes | Direct API workflows                  |
+| MCP tools   | Agentic workflows through MCP clients |
 
 ---
 
@@ -454,13 +576,13 @@ See:
 eval/FIXTURES_NOTE.md
 ```
 
-If your scanner flags them, it is working as intended.
+If a scanner flags these values, it is working as intended.
 
-It is also incidentally demonstrating the context-blindness that this project studies.
+That result also illustrates part of the research problem: many tools can identify secret-like strings, but they do not always understand whether reading the file was necessary or whether the surrounding context matters.
 
 ---
 
-# Cite
+# Citation
 
 ```text
 A. Rajasekaran,
@@ -471,6 +593,6 @@ Preprint forthcoming.
 
 ---
 
-## Final Note
+# Final Note
 
 If you run this on a real corpus, failure reports are worth more than stars.
