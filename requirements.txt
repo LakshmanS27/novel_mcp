@@ -1,0 +1,8 @@
+aiofiles>=24.1.0
+aiosqlite>=0.20.0
+fastapi>=0.115.0
+fastapi-mcp>=0.4.0
+httpx>=0.28.0
+networkx>=3.4
+pydantic-settings>=2.6.0
+uvicorn>=0.32.0

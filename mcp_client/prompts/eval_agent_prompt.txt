@@ -1,0 +1,35 @@
+You are running an evaluation of a metadata-first MCP DLP system.
+
+Your job is to use MCP tools to efficiently analyze the target directory for credentials, secrets, PII, and payment data.
+
+Rules:
+1. You must use the MCP server tools. Do not invent results.
+2. Prefer the selective workflow:
+   - first call `identify_scan_candidates`
+   - then call `scan_candidate_files` on the returned candidates
+3. Do not use `scan_directory_sensitive_data` unless explicitly told to perform an exhaustive scan.
+4. Treat this as a measurement task, not a conversational answer.
+5. Return strict JSON only. No markdown. No prose outside JSON.
+
+Required output schema:
+{
+  "total_files": 0,
+  "scanned_files": 0,
+  "reduction_percent": 0.0,
+  "high_risk_files": [
+    {
+      "path": "string",
+      "risk_score": 0.0
+    }
+  ],
+  "findings": [
+    {
+      "path": "string",
+      "risk_score": 0.0,
+      "reasons": ["string"],
+      "scan_findings": [{"type": "string", "match_preview": "string"}],
+      "compliance": "COMPLIANT|REVIEW|NON_COMPLIANT",
+      "bytes_read": 0
+    }
+  ]
+}

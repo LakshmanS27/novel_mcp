@@ -1,0 +1,30 @@
+[project]
+name = "novel-mcp"
+version = "0.1.0"
+description = "Risk-aware MCP for intelligent data loss prevention."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiofiles>=24.1.0",
+    "aiosqlite>=0.20.0",
+    "fastapi>=0.115.0",
+    "fastapi-mcp>=0.4.0",
+    "httpx>=0.28.0",
+    "langchain-openai>=0.3.0",
+    "mcp-use>=1.3.0",
+    "networkx>=3.4",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.1",
+    "uvicorn>=0.32.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mcp_server*", "mcp_client*"]
+
+[tool.setuptools.package-data]
+mcp_server = ["prompts/*.txt"]
+mcp_client = ["prompts/*.txt"]
