@@ -67,7 +67,7 @@ Until v2 is released, the poster’s v2 exposure and adversarial evaluation figu
 
 The research idea, system design, and evaluation methodology are by **Adhithya Rajasekaran**, sole author of the ACM SecDev 2026 poster.
 
-**Lakshman Shanmugam** contributes code implementation and evaluation execution, and is collaborating on the v2 system currently in development.
+**[Lakshman Shanmugam](https://www.linkedin.com/in/lakshman-shanmugam-00bb42267/)** contributes code implementation and evaluation execution, is collaborating on the v2 system currently in development, and is a contributor to the full paper (in progress).
 
 | Workstream                      | Contributors                                           |
 | ------------------------------- | ------------------------------------------------------ |
