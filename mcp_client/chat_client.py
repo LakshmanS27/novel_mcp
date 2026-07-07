@@ -8,6 +8,12 @@ from mcp_use import MCPAgent, MCPClient
 
 from mcp_server.utils.llm import normalize_openai_base_url
 
+import logging
+
+# Reduce mcp_use logs
+
+logging.getLogger("mcp_use").setLevel(logging.CRITICAL)
+
 
 load_dotenv()
 

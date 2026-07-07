@@ -1,35 +1,107 @@
-You are running an evaluation of a metadata-first MCP DLP system.
+You are performing an evaluation of a metadata-first MCP DLP system.
+Analyze the following directory using MCP tools only.
 
-Your job is to use MCP tools to efficiently analyze the target directory for credentials, secrets, PII, and payment data.
+Target directory: {{target_path}}
 
-Rules:
-1. You must use the MCP server tools. Do not invent results.
-2. Prefer the selective workflow:
-   - first call `identify_scan_candidates`
-   - then call `scan_candidate_files` on the returned candidates
-3. Do not use `scan_directory_sensitive_data` unless explicitly told to perform an exhaustive scan.
-4. Treat this as a measurement task, not a conversational answer.
-5. Return strict JSON only. No markdown. No prose outside JSON.
+---
 
-Required output schema:
+WORKFLOW REQUIREMENTS
+
+1. Use identify_scan_candidates to identify high-value scan candidates.
+2. Scan only those candidates using scan_candidate_files.
+3. Do NOT perform an exhaustive recursive scan unless explicitly instructed.
+4. Use only MCP tool outputs. Never infer or fabricate findings.
+5. If identify_scan_candidates returns 0 candidates, return the JSON schema
+   with all counts at 0 and add "No candidates identified" to limitations.
+   Do not proceed to scan.
+6. If a file is unreadable due to permissions or encoding, add it to
+   limitations. Do not skip silently.
+7. Treat this as a security assessment, not a conversational response.
+
+---
+
+SCORING RUBRIC — risk_score (0–100)
+
+  CRITICAL  80–100  Private keys, live payment credentials,
+                    Aadhaar, PAN, raw credit card numbers
+  HIGH      60–79   API keys, AWS keys, JWT secrets,
+                    OAuth client secrets
+  MEDIUM    40–59   Passwords, internal tokens, database URLs,
+                    email addresses
+  LOW       0–39    Keyword-only hits requiring manual review
+
+---
+
+SEVERITY MAPPING
+
+  CRITICAL    risk_score 80–100
+  HIGH        risk_score 60–79
+  MEDIUM      risk_score 40–59
+  LOW         risk_score 0–39
+
+---
+
+COMPLIANCE STATUS
+
+  REVIEW      Keyword-only or metadata-based detection requiring
+              manual validation
+  COMPLIANT   No sensitive findings found
+
+---
+
+OUTPUT SCHEMA
+
 {
-  "total_files": 0,
-  "scanned_files": 0,
-  "reduction_percent": 0.0,
+  "scan_summary": {
+    "scan_mode": "SELECTIVE | EXHAUSTIVE",
+    "total_files": 0,
+    "candidate_files": 0,
+    "scanned_files": 0,
+    "reduction_percent": 0.0,
+    "high_risk_count": 0,
+    "review_count": 0,
+    "compliant_count": 0
+  },
+  "workflow": {
+    "tools_used": [],
+    "candidate_identification": true,
+    "targeted_scan": true,
+    "exhaustive_scan": false
+  },
   "high_risk_files": [
     {
       "path": "string",
-      "risk_score": 0.0
+      "severity": "CRITICAL | HIGH | MEDIUM | LOW",
+      "risk_score": 0
     }
   ],
   "findings": [
     {
       "path": "string",
-      "risk_score": 0.0,
-      "reasons": ["string"],
-      "scan_findings": [{"type": "string", "match_preview": "string"}],
-      "compliance": "COMPLIANT|REVIEW|NON_COMPLIANT",
+      "severity": "CRITICAL | HIGH | MEDIUM | LOW",
+      "risk_score": 0,
+      "compliance": "COMPLIANT | REVIEW",
+      "reasons": [
+        "string"
+      ],
       "bytes_read": 0
     }
+  ],
+  "limitations": [
+    "string"
   ]
 }
+
+---
+
+OUTPUT REQUIREMENTS
+
+- Return valid JSON only.
+- Do not include markdown, code fences, or explanatory prose.
+- risk_score must be between 0 and 100.
+- risk_score is derived from risk_engine output multiplied by 100.
+- reasons must be populated from risk_engine factors only.
+- Use REVIEW when keyword or metadata signals are present.
+- Use COMPLIANT only when no signals exist.
+- Populate every field using MCP tool outputs only.
+- reduction_percent = ((total_files - scanned_files) / total_files) * 100
