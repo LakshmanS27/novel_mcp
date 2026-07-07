@@ -4,19 +4,31 @@ Analyze the following directory using MCP tools only.
 Target directory: {{target_path}}
 
 ---
-
 WORKFLOW REQUIREMENTS
 
-1. Use identify_scan_candidates to identify high-value scan candidates.
-2. Scan only those candidates using scan_candidate_files.
-3. Do NOT perform an exhaustive recursive scan unless explicitly instructed.
-4. Use only MCP tool outputs. Never infer or fabricate findings.
-5. If identify_scan_candidates returns 0 candidates, return the JSON schema
-   with all counts at 0 and add "No candidates identified" to limitations.
-   Do not proceed to scan.
-6. If a file is unreadable due to permissions or encoding, add it to
-   limitations. Do not skip silently.
-7. Treat this as a security assessment, not a conversational response.
+1. Use identify_scan_candidates to analyze filesystem metadata and identify
+   high-priority candidate files for targeted scanning.
+
+2. Scan only the candidate files returned by identify_scan_candidates using
+   scan_candidate_files.
+
+3. Do NOT scan files that were not selected as candidates unless the user
+   explicitly requests an exhaustive scan.
+
+4. Do NOT perform an exhaustive recursive scan unless the user explicitly
+   requests a "full scan", "exhaustive scan", or "scan everything". In that
+   case, use scan_directory_sensitive_data.
+
+5. Use only MCP tool outputs. Never infer, fabricate, or extrapolate
+   findings beyond what the tools report.
+
+6. If identify_scan_candidates returns 0 candidates:
+   - Return the JSON schema with all counts set to 0.
+   - Add "No candidates identified" to limitations.
+   - Do not invoke scan_candidate_files.
+
+
+9. Treat this as a security assessment, not a conversational response.
 
 ---
 
