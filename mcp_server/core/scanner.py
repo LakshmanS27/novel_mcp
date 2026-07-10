@@ -38,9 +38,11 @@ PATTERNS = {
         rb"\b(?:AKIA|ASIA|AIDA|AGPA)[A-Z0-9]{16}\b"
     ),
 
-    # Indian PAN Number
+    # Indian PAN Number. The 4th character is a holder-category code
+    # restricted to a fixed set of letters (ABCFGHLJPT), which narrows
+    # this considerably versus matching any 5-letter/4-digit/1-letter run.
     "indian_pan": re.compile(
-        rb"\b[A-Z]{5}[0-9]{4}[A-Z]\b"
+        rb"\b[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]\b"
     ),
 
     # FIX 2 — Tightened Aadhaar regex (spaces-aware, less greedy)
@@ -54,9 +56,12 @@ PATTERNS = {
         rb"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b"
     ),
 
-    # Private Keys
+    # Private Keys. Real headers carry an algorithm qualifier before
+    # "PRIVATE KEY" (e.g. "RSA PRIVATE KEY", "OPENSSH PRIVATE KEY",
+    # "EC PRIVATE KEY"), so match zero-or-more leading qualifier words
+    # rather than assuming a single alternative directly precedes "KEY".
     "private_key": re.compile(
-        rb"-----BEGIN (?:RSA|EC|OPENSSH|PRIVATE) KEY-----"
+        rb"-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----"
     ),
 
     # Password Assignments
@@ -236,9 +241,13 @@ async def scan_directory_sensitive_data(
 
     def collect_files() -> list[Path]:
         file_paths: list[Path] = []
-        for current_root, _, filenames in os.walk(root):
+        for current_root, dirnames, filenames in os.walk(root, followlinks=False):
+            dirnames[:] = [d for d in dirnames if not (Path(current_root) / d).is_symlink()]
             for filename in filenames:
-                file_paths.append(Path(current_root) / filename)
+                candidate = Path(current_root) / filename
+                if candidate.is_symlink():
+                    continue
+                file_paths.append(candidate)
         return file_paths
 
     file_paths = await asyncio.to_thread(collect_files)

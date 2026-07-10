@@ -24,6 +24,7 @@ from mcp_server.server.schemas import (
     ComplianceResponse,
     DirectoryScanResponse,
     DirectoryRequest,
+    DiskUsageResponse,
     ExplainRiskResponse,
     FeedbackRequest,
     FeedbackResponse,
@@ -86,6 +87,7 @@ async def list_directory(request: PathRequest) -> ListDirectoryResponse:
         entries = await _list_directory_entries(path)
         return ListDirectoryResponse(path=str(path), entries=entries)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -96,6 +98,7 @@ async def get_file_metadata(request: PathRequest) -> MetadataResponse:
         metadata = await get_stat(path)
         return MetadataResponse(**metadata)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -110,8 +113,10 @@ async def get_directory_structure(
         tree = await run_tree(path, depth=depth)
         return TreeResponse(path=str(path), depth=depth, tree=tree)
     except LinuxCommandError as exc:
+        logger.error("tree command failed: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -127,6 +132,7 @@ async def infer_directory_purpose_route(
         semantic = await infer_directory_purpose(tree_data, filenames, settings)
         return SemanticResponse(**semantic)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -158,6 +164,7 @@ async def compute_risk_score_route(
         scored = compute_risk_score(target, graph, metadata_map[target], semantic_summary, weights, centrality)
         return RiskScoreResponse(path=target, **scored)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -202,6 +209,7 @@ async def explain_risk_route(
             explanation=explanation["explanation"],
         )
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -215,6 +223,7 @@ async def scan_file_sensitive_data_route(
         result = await scan_file_sensitive_data(path, settings)
         return ScanResponse(**result)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -233,6 +242,7 @@ async def identify_scan_candidates_route(
         )
         return CandidateSelectionResponse(**result)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -243,9 +253,13 @@ async def scan_candidate_files_route(
 ) -> CandidateScanResponse:
     try:
         normalized_paths = [str(ensure_safe_path(path)) for path in request.paths]
-        raw_results = await asyncio.gather(
-            *(scan_file_sensitive_data(path, settings) for path in normalized_paths)
-        )
+        semaphore = asyncio.Semaphore(max(4, min(settings.stat_concurrency, 64)))
+
+        async def _scan_bounded(path: str) -> dict[str, Any]:
+            async with semaphore:
+                return await scan_file_sensitive_data(path, settings)
+
+        raw_results = await asyncio.gather(*(_scan_bounded(path) for path in normalized_paths))
         compliance_results = await asyncio.gather(
             *(validate_compliance(result) for result in raw_results)
         )
@@ -264,6 +278,7 @@ async def scan_candidate_files_route(
             results=results,
         )
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -277,6 +292,7 @@ async def scan_directory_sensitive_data_route(
         result = await scan_directory_sensitive_data(path, settings)
         return DirectoryScanResponse(**result)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -291,6 +307,7 @@ async def validate_compliance_route(
         compliance = await validate_compliance(result)
         return ComplianceResponse(**compliance)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -304,6 +321,7 @@ async def submit_feedback_route(
         result = await feedback_store.submit_feedback(str(path), request.label, request.notes)
         return FeedbackResponse(**result)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -315,6 +333,7 @@ async def update_risk_model_route(
         weights = await feedback_store.update_risk_model()
         return UpdateWeightsResponse(weights=weights)
     except Exception as exc:
+        logger.exception("update_risk_model failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -332,10 +351,12 @@ async def run_full_analysis_route(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.post("/get_disk_usage", tags=["filesystem"])
-async def get_disk_usage_route(request: PathRequest) -> dict[str, Any]:
+@router.post("/get_disk_usage", response_model=DiskUsageResponse, tags=["filesystem"])
+async def get_disk_usage_route(request: PathRequest) -> DiskUsageResponse:
     try:
         path = ensure_safe_path(request.path)
-        return await get_disk_usage(path)
+        result = await get_disk_usage(path)
+        return DiskUsageResponse(**result)
     except Exception as exc:
+        logger.warning("request failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc

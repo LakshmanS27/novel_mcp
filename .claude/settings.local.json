@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wsl.exe -e bash -lc 'cd /home/navs-15/novel_mcp && .venv/bin/python -c \" *)",
+      "Bash(wsl.exe -e bash -lc \"cd /home/navs-15/novel_mcp && .venv/bin/python -m pytest tests/ -v 2>&1 | tail -40\")",
+      "Bash(ln -sf ../../manual_test_sandbox_external_secret.env \"//wsl.localhost/ubuntu-24.04/home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/linked_outside_secret.env\")",
+      "Bash(wsl.exe -e bash -lc \"ln -sf ../../manual_test_sandbox_external_secret.env /home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/linked_outside_secret.env\")",
+      "Bash(wsl.exe -e bash -lc 'ls -la /home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/ && cd /home/navs-15/novel_mcp && .venv/bin/python -c \" *)",
+      "Bash(wsl.exe -e bash -lc \"rm -f /home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/linked_outside_secret.env && ln -s ../../manual_test_sandbox_external_secret.env /home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/linked_outside_secret.env && ls -la /home/navs-15/novel_mcp/manual_test_sandbox/symlink_test/\")",
+      "Bash(wsl.exe -e bash -lc \"cd /home/navs-15/novel_mcp && git status --short && echo --- && ls -la tests 2>&1\")",
+      "Bash(wsl.exe -e bash -lc \"mkdir -p /home/navs-15/novel_mcp/manual_test_sandbox/{credentials,pii,finance,clean}\")",
+      "Bash(wsl.exe -e bash -lc \"cd /home/navs-15/novel_mcp && rm -f manual_test_sandbox.zip && \\(cd manual_test_sandbox && zip -r ../manual_test_sandbox.zip . -x '.*'\\) && unzip -l manual_test_sandbox.zip\")",
+      "Bash(wsl.exe -e bash -lc 'cd /home/navs-15/novel_mcp && rm -f manual_test_sandbox.zip && .venv/bin/python -c \" *)",
+      "Bash(wsl.exe -e bash -lc 'python3 -c \" *)",
+      "Bash(wsl.exe -e bash -lc \"ls -la /home/navs-15/novel_mcp/manual_test_sandbox 2>&1; ls -la /home/navs-15/novel_mcp/manual_test_sandbox.zip 2>&1\")",
+      "Bash(wsl.exe -e bash -lc \"cd /home/navs-15/novel_mcp && git diff mcp_server/core/scanner.py | grep -A6 'Private Keys'\")",
+      "Bash(wsl.exe -e bash -lc 'mkdir -p /tmp/id_rsa_check && printf -- '\\\\''-----BEGIN OPENSSH PRIVATE KEY-----\\\\nSYNTHETIC-NOT-A-REAL-KEY\\\\n-----END OPENSSH PRIVATE KEY-----\\\\n'\\\\'' > /tmp/id_rsa_check/id_rsa && cd /home/navs-15/novel_mcp && .venv/bin/python -c \" *)"
+    ]
+  }
+}

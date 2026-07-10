@@ -845,7 +845,8 @@ For evaluation, the harness can auto-start the local server when LLM mode is ena
 ## Known Limitations
 
 - The scanner is regex and keyword based. It does not parse PDFs, Office documents, images, or archives deeply.
-- Payment-card-like regexes do not perform Luhn validation, so test numbers can still appear as findings.
+- Payment-card-like matches are checksum-validated with the Luhn algorithm, and Aadhaar-like matches with the Verhoeff algorithm, but Luhn/Verhoeff only prove checksum validity, not that a number is a real, active credential — some synthetic test numbers can still pass.
+- Indian PAN matches are validated against the PAN category-code position but have no public checksum digit, so false positives are still possible on PAN-shaped strings.
 - Semantic inference depends on provider/model behavior and may fall back to deterministic logic.
 - Candidate selection favors text-bearing and configuration-like files; unusual sensitive binary formats need specialized parsers.
 - The graph pipeline uses bounded tree depth, so very deep files may be missed by B2 depending on `DLP_MCP_MAX_TREE_DEPTH`.

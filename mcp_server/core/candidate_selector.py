@@ -204,9 +204,13 @@ async def identify_scan_candidates(
 
     def collect_paths() -> list[Path]:
         file_paths: list[Path] = []
-        for current_root, _, filenames in os.walk(root):
+        for current_root, dirnames, filenames in os.walk(root, followlinks=False):
+            dirnames[:] = [d for d in dirnames if not (Path(current_root) / d).is_symlink()]
             for filename in filenames:
-                file_paths.append(Path(current_root) / filename)
+                candidate = Path(current_root) / filename
+                if candidate.is_symlink():
+                    continue
+                file_paths.append(candidate)
         return file_paths
 
     file_paths = await asyncio.to_thread(collect_paths)

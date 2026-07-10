@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from mcp_use import MCPAgent, MCPClient
 
+from mcp_server.server.config import OPENROUTER, PROVIDER_CONFIGS, detect_provider, get_provider_env_vars
 from mcp_server.utils.llm import normalize_openai_base_url
 
 import logging
@@ -27,59 +28,19 @@ def _load_agent_prompt() -> str:
 
 def _build_llm() -> ChatOpenAI:
     """Build LLM client with auto-detected provider support.
-    
-    Checks for API keys in priority order: CommandCode > OpenAI > OpenRouter
-    Uses the first provider with a valid, non-empty API key.
+
+    Uses the same detection order and provider defaults as the server
+    (`mcp_server.server.config`) so the client and server never disagree
+    about which provider or base URL is in effect.
     """
-    providers = [
-        {
-            "name": "commandcode",
-            "api_key_env": "COMMANDCODE_API_KEY",
-            "base_url_env": "COMMANDCODE_BASE_URL",
-            "model_env": "COMMANDCODE_MODEL",
-            "default_base_url": "https://api.commandcode.ai/v1",
-            "default_model": "commandcode-v1",
-        },
-        {
-            "name": "openai",
-            "api_key_env": "OPENAI_API_KEY",
-            "base_url_env": "OPENAI_BASE_URL",
-            "model_env": "OPENAI_MODEL",
-            "default_base_url": "https://api.openai.com/v1",
-            "default_model": "gpt-4o-mini",
-        },
-        {
-            "name": "openrouter",
-            "api_key_env": "OPENROUTER_API_KEY",
-            "base_url_env": "OPENROUTER_BASE_URL",
-            "model_env": "OPENROUTER_MODEL",
-            "default_base_url": "https://openrouter.ai/api/v1",
-            "default_model": "nvidia/nemotron-3-nano-30b-a3b:free",
-        },
-    ]
-    
-    for provider in providers:
-        api_key = getenv(provider["api_key_env"], "").strip()
-        if not api_key or api_key in ("", "your-api-key-here", "sk-xxx"):
-            continue
-            
-        base_url = normalize_openai_base_url(
-            getenv(provider["base_url_env"], provider["default_base_url"])
-        )
-        model = getenv(provider["model_env"], provider["default_model"])
-        
-        return ChatOpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            model=model,
-        )
-    
+    provider = detect_provider()
+    env_vars = get_provider_env_vars(provider)
+    api_key = env_vars["api_key"] or getenv(PROVIDER_CONFIGS[OPENROUTER]["api_key_env"])
+
     return ChatOpenAI(
-        api_key=getenv("OPENROUTER_API_KEY"),
-        base_url=normalize_openai_base_url(
-            getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        ),
-        model=getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-nano-30b-a3b:free"),
+        api_key=api_key,
+        base_url=env_vars["base_url"],
+        model=env_vars["model"],
     )
 
 

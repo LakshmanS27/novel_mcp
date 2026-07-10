@@ -19,7 +19,10 @@ def luhn_check(number: str) -> bool:
 
         total += n
 
-    return total % 10 == 0# Multiplication table
+    return total % 10 == 0
+
+
+# Multiplication table
 _d = [
     [0,1,2,3,4,5,6,7,8,9],
     [1,2,3,4,0,6,7,8,9,5],

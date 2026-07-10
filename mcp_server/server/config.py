@@ -43,10 +43,13 @@ PROVIDER_CONFIGS = {
 }
 
 
-def _detect_provider() -> str:
+def detect_provider() -> str:
     """Detect which LLM provider to use based on available API keys.
-    
-    Priority: CommandCode > OpenAI > OpenRouter (first with valid key wins)
+
+    Priority: CommandCode > OpenAI > OpenRouter (first with valid key wins).
+
+    Shared by the server (this module) and `mcp_client/chat_client.py` so the
+    two never drift on provider defaults or detection order.
     """
     for provider in [COMMANDCODE, OPENAI, OPENROUTER]:
         config = PROVIDER_CONFIGS[provider]
@@ -56,7 +59,7 @@ def _detect_provider() -> str:
     return OPENROUTER  # Default fallback
 
 
-def _get_provider_env_vars(provider: str) -> dict[str, str]:
+def get_provider_env_vars(provider: str) -> dict[str, str]:
     """Get resolved environment variables for a provider."""
     config = PROVIDER_CONFIGS[provider]
     return {
@@ -84,7 +87,6 @@ class Settings(BaseSettings):
     max_tree_depth: int = 8
     stat_concurrency: int = 64
     similarity_bucket_limit: int = 64
-    scan_percent: float = 0.05
     max_scan_percent: float = 0.05
     min_scan_percent: float = 0.01
     db_path: Path = Field(default=BASE_DIR / "mcp_server" / "data" / "state.db")
@@ -119,7 +121,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def apply_llm_fallbacks(self) -> "Settings":
         # First, detect the provider based on available API keys
-        detected_provider = _detect_provider()
+        detected_provider = detect_provider()
         
         # If explicit DLP_MCP_LLM_* settings are provided, use those
         has_explicit_url = self.llm_base_url not in ("", "http://127.0.0.1:11434/v1")
@@ -133,7 +135,7 @@ class Settings(BaseSettings):
             return self
         
         # Otherwise, auto-configure from detected provider
-        provider_env = _get_provider_env_vars(detected_provider)
+        provider_env = get_provider_env_vars(detected_provider)
         
         # Apply provider settings if not explicitly overridden
         if not has_explicit_url:

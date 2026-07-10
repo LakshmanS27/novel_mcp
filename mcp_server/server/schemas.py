@@ -135,3 +135,8 @@ class FullAnalysisResponse(BaseModel):
     reduction_percent: float
     high_risk_files: list[dict[str, Any]]
     findings: list[dict[str, Any]]
+
+
+class DiskUsageResponse(BaseModel):
+    path: str
+    human_size: str

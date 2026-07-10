@@ -9,11 +9,21 @@ from fastapi_mcp import FastApiMCP
 from mcp_server.core.feedback import FeedbackStore
 from mcp_server.server.config import get_settings
 from mcp_server.server.routes import router
-from mcp_server.utils.logger import configure_logging
+from mcp_server.utils.logger import configure_logging, get_logger
 
 
 settings = get_settings()
 configure_logging(settings.log_level)
+logger = get_logger(__name__)
+
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+if settings.app_host not in _LOOPBACK_HOSTS:
+    logger.warning(
+        "DLP_MCP_APP_HOST=%s is not a loopback address. This server has no "
+        "authentication and exposes local filesystem scanning tools; only "
+        "bind to a non-loopback host on a trusted, isolated network.",
+        settings.app_host,
+    )
 
 
 @asynccontextmanager
