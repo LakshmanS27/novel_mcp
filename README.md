@@ -5,6 +5,8 @@
 **Adhithya Rajasekaran**
 **ACM SecDev 2026 · Montréal**
 
+> **Correction, November 2026.** The evaluation figures on the ACM SecDev 2026 poster are withdrawn. The synthetic corpus behind most of them leaked class labels through file names, content types and sizes, and the single-fixture LLM lane has no run logs. See [Withdrawn Poster Figures](#withdrawn-poster-figures).
+
 ---
 
 ## One-Line Summary
@@ -47,19 +49,17 @@ It then scores paths, selects likely candidates, and opens only those files for 
 
 ## Repository Status
 
-This repository currently contains the **v1 system**.
+This repository contains the **v1 system**.
 
-The ACM SecDev 2026 poster reports results from a later **v2 evaluation generation**. That v2 work is under active development and will be released here.
+The evaluation figures on the ACM SecDev 2026 poster came from a later v2 evaluation generation. Those figures are withdrawn; see [Withdrawn Poster Figures](#withdrawn-poster-figures).
 
-Until v2 is released, the poster’s v2 exposure and adversarial evaluation figures are **not fully reproducible from this repository**.
-
-| Area                  |         Status | Notes                                                                                                          |
-| --------------------- | -------------: | -------------------------------------------------------------------------------------------------------------- |
-| v1 system             |      Available | FastAPI application mounted as an MCP server using `fastapi_mcp`                                               |
-| v1 MCP tools          |      Available | 15 tools for filesystem inspection, risk scoring, candidate selection, targeted scanning, and analyst feedback |
-| v1 evaluation harness |      Available | Seeds synthetic ground truth and compares selective scanning against an exhaustive baseline                    |
-| v2 evaluation system  | In development | Deterministic FS-BOM read gate over synthetic 5K / 10K corpora                                                 |
-| Poster figures        |       v2-based | Report later evaluation-generation results, not all reproducible from the current tree                         |
+| Area                  |    Status | Notes                                                                                                          |
+| --------------------- | --------: | -------------------------------------------------------------------------------------------------------------- |
+| v1 system             | Available | FastAPI application mounted as an MCP server using `fastapi_mcp`                                               |
+| v1 MCP tools          | Available | 15 tools for filesystem inspection, risk scoring, candidate selection, targeted scanning, and analyst feedback |
+| v1 evaluation harness | Available | Seeds synthetic ground truth and compares selective scanning against an exhaustive baseline                    |
+| v2 evaluation         | Withdrawn | Synthetic 5K / 10K corpora leaked class labels                                                                 |
+| Poster figures        | Withdrawn | See [Withdrawn Poster Figures](#withdrawn-poster-figures)                                                      |
 
 ---
 
@@ -86,7 +86,7 @@ The research idea, system design, and evaluation methodology are by **Adhithya R
 | Item     | Details                                    |
 | -------- | ------------------------------------------ |
 | License  | MIT — see `LICENSE`                        |
-| Preprint | Forthcoming; arXiv endorsement in progress |
+| Preprint | None                                       |
 | Contact  | `rajasekaran.adhit@gmail.com`              |
 | LinkedIn | `linkedin.com/in/adhi1991`                 |
 
@@ -214,24 +214,6 @@ This means the access boundary is enforced by:
 
 Every capability is a discrete, named, loggable tool call.
 
-In the v2 run against the official Filesystem MCP server:
-
-```text
-version / commit: ___
-tools: 14
-transport: stdio
-```
-
-the inventory phase recorded:
-
-```text
-zero content-read calls
-```
-
-This was verified from the tool-call log.
-
-In the pinned version used for that run, `search_files` performs name/path matching only. It does not perform content grep.
-
 ---
 
 # Important Privacy Note
@@ -265,7 +247,7 @@ There are two generations of evaluation discussed in this project.
 | Evaluation    | Repository Status | Purpose                                                                                                            |
 | ------------- | ----------------: | ------------------------------------------------------------------------------------------------------------------ |
 | v1 evaluation |         Available | Demonstrates selective scanning against an exhaustive baseline using synthetic ground truth                        |
-| v2 evaluation |    In development | Evaluates deterministic FS-BOM read gating over larger synthetic corpora with seeded variants and adversarial sets |
+| v2 evaluation |         Withdrawn | Deterministic FS-BOM read gating over synthetic corpora; the corpora leaked class labels (see Withdrawn Poster Figures) |
 
 ---
 
@@ -289,188 +271,19 @@ Reported metrics include:
 
 ---
 
-## v2 Evaluation
+# Withdrawn Poster Figures
 
-The ACM SecDev 2026 poster reports results from the v2 evaluation generation.
+In November 2026 the authors withdrew the evaluation figures on the ACM SecDev 2026 poster. Do not cite them.
 
-This evaluation uses:
+| Poster figure | Why it is withdrawn |
+| ------------- | ------------------- |
+| v2 results on the synthetic 5K / 10K corpora (~75% read reduction, 100% recall on base positives, 0.1 decoy suppression) | The corpus leaked class labels: file names, content types, body sizes and self-labelled bodies reveal which files are positives, so the figures do not measure the read gate. |
+| Adversarial evasion results (2,730 cases, 91.6% caught, 78.5% S3-like recall) | Built on the same corpus. |
+| Single-fixture LLM + MCP lane (Flask, 273 → 8 files opened, precision 1.00, 2 / 2 decoys suppressed) | No run logs or clean artifact back it. |
+| Scanner baselines (Gitleaks, TruffleHog, detect-secrets) | Run on the same synthetic corpus, with live secret verification on and synthetic tokens that do not match real formats. |
+| Zero content-read calls against the official Filesystem MCP server | The server version was never recorded, so the run cannot be reproduced. |
 
-* Synthetic 5K / 10K corpora
-* 10-seed evaluation matrix
-* Seeded source profiles
-* Adversarial evasion sets
-* Deterministic FS-BOM read gate
-* Checksum-pinned fixture integrity
-
-| Term              | Meaning                                                   |
-| ----------------- | --------------------------------------------------------- |
-| 5K corpus         | 4,700 evaluated files after excluding non-evaluable files |
-| 10K corpus        | 9,333 evaluated files after excluding non-evaluable files |
-| M10               | 10-seed evaluation matrix                                 |
-| 516-row checksums | Fixture integrity manifest pinning files by hash          |
-| 195 tests         | v2 test suite across macOS and WSL2                       |
-
-The gate is deterministic. Seeds randomize fixture generation, not the gate itself.
-
----
-
-# Poster Figure Clarifications
-
-This section clarifies the ACM SecDev 2026 poster figures.
-
----
-
-## Single-Fixture Model-Assisted Example
-
-One poster line reports a single Flask fixture:
-
-```text
-Flask 273f · A:273 0.71 0/2 · B:100 0.71 0/2 · C(LLM+MCP):8 1.00 2/2
-```
-
-This means:
-
-```text
-files opened · precision · context traps suppressed
-```
-
-| Lane | Meaning                | Files Opened | Precision | Context Traps Suppressed |
-| ---- | ---------------------- | -----------: | --------: | -----------------------: |
-| A    | Read-all baseline      |          273 |      0.71 |                    0 / 2 |
-| B    | Heuristic shortlist    |          100 |      0.71 |                    0 / 2 |
-| C    | Bounded LLM + MCP lane |            8 |      1.00 |                    2 / 2 |
-
-The reduction from 273 files opened to 8 files opened is:
-
-```text
-273 → 8 = 97% reduction
-```
-
-This is a **single-fixture illustration**, not a scaled benchmark.
-
-It should not be confused with the separate v2 corpus-level read-reduction figure.
-
-| Figure         | Applies To                                |
-| -------------- | ----------------------------------------- |
-| 97% reduction  | Single Flask fixture only                 |
-| ~75% reduction | v2 deterministic gate on 5K / 10K corpora |
-
----
-
-## Trap Suppression Clarification
-
-Two trap-suppression values appear in the poster, but they come from different experiments.
-
-| Value | Experiment                                 | Interpretation                 |
-| ----: | ------------------------------------------ | ------------------------------ |
-|   0.1 | v2 deterministic metadata gate at 5K scale | Weak decoy suppression         |
-| 2 / 2 | Single-fixture bounded LLM lane            | Both fixture decoys suppressed |
-
-Metadata alone cannot reliably distinguish every decoy.
-
-For example:
-
-```text
-/tests/sample_card.txt
-/src/customer_card_export.csv
-```
-
-Both paths may contain signals related to card data, but only one may represent realistic sensitive exposure.
-
-The LLM lane can reason about context in the small fixture. Whether that holds at scale is future work.
-
----
-
-## Recall Clarification
-
-The poster separates two groups:
-
-| Group                   | Meaning                                        |         Result |
-| ----------------------- | ---------------------------------------------- | -------------: |
-| Base planted positives  | Realistic seeded sensitive files               |    100% recall |
-| Adversarial evasion set | Hard cases designed to defeat metadata signals | Partial recall |
-
-The 100% recall claim applies to **base planted positives**, not to the adversarial evasion set.
-
----
-
-## Adversarial Evasion Results
-
-The adversarial set contains:
-
-| Metric                          | Value |
-| ------------------------------- | ----: |
-| Total adversarial cases         | 2,730 |
-| Seeds                           |    10 |
-| Cases per seed                  |   273 |
-| S3-like cases per seed          |   107 |
-| Misses per seed                 |    23 |
-| Total misses                    |   230 |
-| Total caught                    | 2,500 |
-| Aggregate caught rate           | 91.6% |
-| S3-like adversarial recall      | 78.5% |
-| Repository profile recall       |  100% |
-| Local filesystem profile recall |  100% |
-| Shared-drive profile recall     |  100% |
-
-All missed cases are in the S3-like profile.
-
-This is expected to be the hardest profile because flat object-store namespaces often lack useful path semantics.
-
-Example:
-
-```text
-s3://bucket/a8f31d9c-blob
-s3://bucket/export-00017
-s3://bucket/tmp-object-92
-```
-
-With opaque object keys, metadata-first triage has less context to reason from.
-
-This is a mapped boundary of the approach, not a hidden failure.
-
----
-
-## Poster Erratum
-
-The poster Section 04 headline says:
-
-```text
-92.7% of 2,730 trap cases caught
-```
-
-The correct aggregate is:
-
-```text
-2,730 − 230 = 2,500 caught
-2,500 / 2,730 = 91.6%
-```
-
-| Poster Element                     | Status    |
-| ---------------------------------- | --------- |
-| Headline: “92.7% caught”           | Incorrect |
-| Caption: “230 of 2,730 missed”     | Correct   |
-| Per-profile bars                   | Correct   |
-| Section 07: “23 misses every seed” | Correct   |
-| Correct aggregate                  | 91.6%     |
-
----
-
-## Terminology: Two Meanings of “Trap”
-
-The word “trap” is used in two ways.
-
-| Term                  | Meaning                                       | Desired Behavior |
-| --------------------- | --------------------------------------------- | ---------------- |
-| Adversarial trap case | A hard positive case the system should catch  | Catch it         |
-| Decoy trap            | A planted non-sensitive or context-only decoy | Suppress it      |
-
-In short:
-
-```text
-Evasion traps should be caught.
-Decoy traps should be skipped.
-```
+After the leak was removed, a related metadata read gate did no better than opening files at random.
 
 ---
 
@@ -489,34 +302,6 @@ These are not the same as the A / B / C lanes in the single-fixture example.
 | E       | Organization-controlled inference |
 
 Each profile shares the same access-boundary principle, but each requires separate validation.
-
----
-
-# Scanner Baselines
-
-The poster compares against local scanner baselines.
-
-| Scanner        | Recall | Precision | Trap Score |
-| -------------- | -----: | --------: | ---------: |
-| Gitleaks       |   0.16 |      0.65 |       0.88 |
-| TruffleHog     |   0.16 |      0.96 |       1.00 |
-| detect-secrets |   0.14 |      0.56 |       0.90 |
-
-These are secret scanners.
-
-The Read the Room ground truth includes sensitive data families outside traditional secret-scanning scope:
-
-* PII
-* PHI
-* Card data
-* Compliance-sensitive files
-* Secrets
-
-The project does **not** claim to simply out-detect these tools.
-
-The claimed contribution is:
-
-> Access-boundary-aware discovery with explicit exposure accounting.
 
 ---
 
@@ -588,7 +373,6 @@ That result also illustrates part of the research problem: many tools can identi
 A. Rajasekaran,
 "Read the Room: LLM-Based Filesystem Intelligence for Targeted Sensitive Data Discovery,"
 poster, ACM SecDev 2026.
-Preprint forthcoming.
 ```
 
 ---
